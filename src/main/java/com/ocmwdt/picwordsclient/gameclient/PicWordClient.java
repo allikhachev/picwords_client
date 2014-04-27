@@ -9,6 +9,8 @@ import java.io.Closeable;
  */
 public interface PicWordClient extends Closeable {
 
+    void startNewGame() throws ClientException;
+
     void authorization(String login, String passw) throws ClientException;
 
     void toGameTab() throws ClientException;
@@ -17,8 +19,6 @@ public interface PicWordClient extends Closeable {
 
     /**
      * Returns current game question.
-     *
-     * @return current game question or null if no question
      */
     String getCurrentQuestion();
 

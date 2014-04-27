@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Main application class.
  *
- * @author @author <a href="mailto:ocmwdt@gmail.com">Alexey Likhachev</a>
+ * @author alexey.likhachev
  */
 public class Application {
 
@@ -22,7 +22,15 @@ public class Application {
     public static void main(String[] args) throws IOException, ClientException, InterruptedException {
         try (PicWordClient pwClient = new PicWordClientImpl(URL);
                 AnswerClient ansClient = new LoopyRuAnswerClient()) {
+
+            pwClient.authorization("some85one@mail.ru", "663399");
+
             pwClient.toGameTab();
+
+            String testQuestion = pwClient.getCurrentQuestion();
+            if (testQuestion == null) {
+                pwClient.startNewGame();
+            }
 
             for (int i = 0; i < 100; i++) {
                 TimeUnit.SECONDS.sleep(ACTIVITY_DELAY);
@@ -32,7 +40,7 @@ public class Application {
                     continue;
                 }
                 List<String> answers = ansClient.getAnswers(question);
-                if(!answers.isEmpty()){
+                if (!answers.isEmpty()) {
                     pwClient.postMessage(answers.get(0));
                 }
             }

@@ -1,17 +1,17 @@
 package com.ocmwdt.picwordsclient.answerclient;
 
+import com.ocmwdt.picwordsclient.WebDriverUtil;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -23,8 +23,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 public class LoopyRuAnswerClient implements AnswerClient {
 
     private static final String SITE = "http://loopy.ru/";
-    private static final int SCRIPT_TIMEOUT = 7;
-    private static final int PAGE_LOAD_TIMEOUT = 7;
     private static final int ANSWER_LOAD_TIMEOUT = 3;
 
     private static final String QUESTION_ELEMENT_PATH = "//input[@id='d' and @type='text']";
@@ -43,6 +41,7 @@ public class LoopyRuAnswerClient implements AnswerClient {
     @Override
     public void close() throws IOException {
         if (driver != null) {
+            LOG.log(Level.FINE, LoopyRuAnswerClient.class.getSimpleName() + " closed");
             driver.close();
         }
     }
@@ -67,9 +66,11 @@ public class LoopyRuAnswerClient implements AnswerClient {
             List<String> answers = new ArrayList<>();
             for (WebElement element : answerElements) {
                 answers.add(element.getText());
+                LOG.log(Level.FINE, "answer: %0", element.getText());
             }
             return answers;
         } catch (NoSuchElementException | TimeoutException ex) {
+            LOG.log(Level.FINE, "no answers");
             return Collections.<String>emptyList();
         }
     }
@@ -78,11 +79,9 @@ public class LoopyRuAnswerClient implements AnswerClient {
      * initiates the client.
      */
     private void init() {
-        driver = new FirefoxDriver();
-        driver.manage().timeouts().
-                pageLoadTimeout(PAGE_LOAD_TIMEOUT, TimeUnit.SECONDS).
-                setScriptTimeout(SCRIPT_TIMEOUT, TimeUnit.SECONDS);
+        driver = WebDriverUtil.getHtmlUnitDriver(false);
         driver.get(SITE);
+        LOG.log(Level.FINE, LoopyRuAnswerClient.class.getSimpleName() + " closed");
     }
 
 }
