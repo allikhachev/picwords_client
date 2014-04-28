@@ -7,8 +7,12 @@ import org.openqa.selenium.WebDriver;
 import com.ocmwdt.picwordsclient.exceptions.ClientException;
 import java.util.logging.Level;
 import org.openqa.selenium.By;
+import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 /**
  *
@@ -23,6 +27,8 @@ public class PicWordClientImpl implements PicWordClient {
     private static final String EMAIL_INPUT_PATH = "//*[@id='authEmail']";
     private static final String PASSW_INPUT_PATH = "//*[@id='authPassword']";
     private static final String LOGIN_BUTTON_PATH = "//*[@id='authButton']";
+    private static final String RIGHT_ANSWER_TEST_PATH = "//*[@id='text']/text()[contains(.,'Вы ответили верно')]/following-sibling::span[@class='serverMessage' and contains(text(),'%s')]";
+    private static final int ANSWER_PROCESS_TIMEOUT = 2;
 
     private static final String TO_NEW_GAME_PATH = "//*[@id='newGame']";
     private static final String TO_GAME_TAB_PATH = "//*[@id='toGame']";
@@ -42,25 +48,33 @@ public class PicWordClientImpl implements PicWordClient {
     }
 
     @Override
+    public void close() throws IOException {
+        if (driver != null) {
+            driver.close();
+            LOG.log(Level.INFO, PicWordClientImpl.class.getSimpleName() + " closed");
+        }
+    }
+
+    @Override
     public void startNewGame() throws ClientException {
         goToTab(TO_NEW_GAME_PATH, "New Game tab not found!");
     }
 
     @Override
     public void authorization(final String login, final String passw) throws ClientException {
-        LOG.log(Level.FINE, "Start authorization");
+        LOG.log(Level.INFO, "Start authorization");
         toAuthTab();
         try {
             //set login
             WebElement email = driver.findElement(By.xpath(EMAIL_INPUT_PATH));
             email.clear();
             email.sendKeys(login);
-            LOG.log(Level.FINE, "email: %0", email);
+            LOG.log(Level.INFO, "email: {0}", login);
             //set password
             WebElement pasElement = driver.findElement(By.xpath(PASSW_INPUT_PATH));
             pasElement.clear();
             pasElement.sendKeys(passw);
-            LOG.log(Level.FINE, "passw: %0", passw);
+            LOG.log(Level.INFO, "passw: {0}", passw);
             //perform input
             WebElement loginButton = driver.findElement(By.xpath(LOGIN_BUTTON_PATH));
             loginButton.click();
@@ -83,7 +97,7 @@ public class PicWordClientImpl implements PicWordClient {
             messageInput.clear();
             messageInput.sendKeys(message);
             sendButton.click();
-            LOG.log(Level.FINE, "posted message: %0", message);
+            LOG.log(Level.INFO, "posted message: {0}", message);
         } catch (NoSuchElementException nsee) {
             LOG.log(Level.SEVERE, MSG_GAME_EL_NOT_FOUND, nsee);
             throw new ClientException(MSG_GAME_EL_NOT_FOUND, nsee);
@@ -95,26 +109,35 @@ public class PicWordClientImpl implements PicWordClient {
         try {
             WebElement questionElement = driver.findElement(By.xpath(LAST_QUESTION_PATH));
             String text = trimQuestion(questionElement.getText());
-            LOG.log(Level.FINE, "current question: %0", text);
+            LOG.log(Level.INFO, "current question: {0}", text);
             return text;
         } catch (NoSuchElementException nsee) {
-            LOG.log(Level.FINE, "question not found");
+            LOG.log(Level.INFO, "question not found");
             return null;
         }
     }
 
     @Override
-    public void close() throws IOException {
-        if (driver != null) {
-            driver.close();
-            LOG.log(Level.FINE, PicWordClientImpl.class.getSimpleName() + " closed");
+    public boolean IsAnswerRight(final String answer) {
+        if (answer == null || answer.isEmpty()) {
+            return false;
+        }
+        try {
+            //wait for answer process
+            String rightAnsPath = String.format(RIGHT_ANSWER_TEST_PATH, answer);
+            new WebDriverWait(driver, ANSWER_PROCESS_TIMEOUT).
+                    until(ExpectedConditions.presenceOfElementLocated(By.xpath(rightAnsPath)));
+            return true;
+        } catch (NoSuchElementException | TimeoutException ex) {
+            LOG.log(Level.INFO, "answer {0} incorrect", answer);
+            return false;
         }
     }
 
     private void init() {
         driver = WebDriverUtil.getFirefoxDriver();
         driver.get(site);
-        LOG.log(Level.FINE, PicWordClientImpl.class.getSimpleName() + " created");
+        LOG.log(Level.INFO, PicWordClientImpl.class.getSimpleName() + " created");
     }
 
     private String trimQuestion(String question) {
@@ -134,9 +157,9 @@ public class PicWordClientImpl implements PicWordClient {
         try {
             WebElement element = driver.findElement(By.xpath(path));
             element.click();
-        } catch (NoSuchElementException nsee) {
-            LOG.log(Level.SEVERE, errMessage, nsee);
-            throw new ClientException(errMessage, nsee);
+        } catch (NoSuchElementException | ElementNotVisibleException ex) {
+            LOG.log(Level.SEVERE, errMessage, ex);
+            throw new ClientException(errMessage, ex);
         }
     }
 }

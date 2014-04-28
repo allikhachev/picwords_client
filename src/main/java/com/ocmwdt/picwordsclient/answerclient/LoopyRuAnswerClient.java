@@ -41,7 +41,7 @@ public class LoopyRuAnswerClient implements AnswerClient {
     @Override
     public void close() throws IOException {
         if (driver != null) {
-            LOG.log(Level.FINE, LoopyRuAnswerClient.class.getSimpleName() + " closed");
+            LOG.log(Level.INFO, LoopyRuAnswerClient.class.getSimpleName() + " closed");
             driver.close();
         }
     }
@@ -66,11 +66,11 @@ public class LoopyRuAnswerClient implements AnswerClient {
             List<String> answers = new ArrayList<>();
             for (WebElement element : answerElements) {
                 answers.add(element.getText());
-                LOG.log(Level.FINE, "answer: %0", element.getText());
+                LOG.log(Level.INFO, "answer: {0}", element.getText());
             }
             return answers;
         } catch (NoSuchElementException | TimeoutException ex) {
-            LOG.log(Level.FINE, "no answers");
+            LOG.log(Level.INFO, "no answers");
             return Collections.<String>emptyList();
         }
     }
@@ -81,7 +81,7 @@ public class LoopyRuAnswerClient implements AnswerClient {
     private void init() {
         driver = WebDriverUtil.getHtmlUnitDriver(false);
         driver.get(SITE);
-        LOG.log(Level.FINE, LoopyRuAnswerClient.class.getSimpleName() + " closed");
+        LOG.log(Level.INFO, LoopyRuAnswerClient.class.getSimpleName() + " closed");
     }
 
 }
