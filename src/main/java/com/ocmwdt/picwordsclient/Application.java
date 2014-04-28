@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.LogManager;
 
+import com.ocmwdt.picwordsclient.funclient.FunClient;
+import com.ocmwdt.picwordsclient.funclient.PoroshokuhodiRuClient;
+
 /**
  * Game client controller.
  *
@@ -22,6 +25,7 @@ public class Application {
     private static final String DEFAULT_EMAIL = "some85one@mail.ru";
     private static final int ACTIVITY_DELAY = 7;
     private static final int MAX_ANSWERS = 7;
+    private static final int MAX_MISS_COUNT = 6;
 
     public static void main(String[] args) throws IOException, ClientException, InterruptedException {
         initLogger();
@@ -34,27 +38,35 @@ public class Application {
         }
 
         try (PicWordClient pwClient = new PicWordClientImpl(URL);
-                AnswerClient ansClient = new LoopyRuAnswerClient()) {
+                AnswerClient ansClient = new LoopyRuAnswerClient();
+                FunClient poroshok = new PoroshokuhodiRuClient()) {
 
             pwClient.authorization(email, password);
 
             pwClient.toGameTab();
 
+            int missCount = 0;
+
             for (;;) {
                 TimeUnit.SECONDS.sleep(ACTIVITY_DELAY);
 
                 String question = pwClient.getCurrentQuestion();
-                if (question != null) {
-                    List<String> answers = ansClient.getAnswers(question);
-                    if (!answers.isEmpty()) {
-                        postAnswers(pwClient, answers);
-                    }
-                } else {
+                if (question == null) {
                     try {
                         pwClient.startNewGame();
                     } catch (ClientException ce) {
                     }
+                    continue;
                 }
+
+                List<String> answers = ansClient.getAnswers(question);
+                if (!answers.isEmpty()) {
+                    postAnswers(pwClient, answers);
+                } else if (missCount > MAX_MISS_COUNT) {
+                    postSomeFun(pwClient, poroshok);
+                    missCount = 0;
+                }
+                missCount++;
             }
         }
     }
@@ -67,6 +79,13 @@ public class Application {
                 break;
             }
             i++;
+        }
+    }
+
+    private static void postSomeFun(final PicWordClient pwClient, final FunClient poroshok) throws ClientException {
+        List<String> funLines = poroshok.getNextFunnyText();
+        for (String line : funLines) {
+            pwClient.postMessage(line);
         }
     }
 
