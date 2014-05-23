@@ -6,7 +6,11 @@ import com.ocmwdt.picwordsclient.exceptions.ClientException;
 import com.ocmwdt.picwordsclient.gameclient.PicWordClient;
 import com.ocmwdt.picwordsclient.gameclient.PicWordClientImpl;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Objects;
+import java.util.Queue;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.LogManager;
 
@@ -23,11 +27,16 @@ public class Application {
     private static final String URL = "http://picwords.ru";
     private static final String DEFAULT_PASSWORD = "663399";
     private static final String DEFAULT_EMAIL = "some85one@mail.ru";
-    private static final int ACTIVITY_DELAY = 7;
-    private static final int MAX_ANSWERS = 7;
-    private static final int MAX_MISS_COUNT = 6;
+    private static final int ACTIVITY_DELAY_SEC = 1;
+    private static final long MIN_WAIT_BEFORE_ANSWER_SEC = 6;
+    private static final long WAIT_BEFORE_ANSWER_RANGE_SEC = 5;
+    private static final int MAX_FUN_DELAY = 120;
+    private static final Random RANDOM_GENERATOR = new Random();
 
     public static void main(String[] args) throws IOException, ClientException, InterruptedException {
+        String oldQuestion = null;
+        Queue<String> answers = new ArrayDeque<>();
+
         initLogger();
 
         String email = DEFAULT_EMAIL;
@@ -38,19 +47,19 @@ public class Application {
         }
 
         try (PicWordClient pwClient = new PicWordClientImpl(URL);
-                AnswerClient ansClient = new LoopyRuAnswerClient();
-                FunClient poroshok = new PoroshokuhodiRuClient()) {
+            AnswerClient ansClient = new LoopyRuAnswerClient();
+            FunClient poroshok = new PoroshokuhodiRuClient()) {
 
             pwClient.authorization(email, password);
 
             pwClient.toGameTab();
 
-            int missCount = 0;
-
+            int funWait = 0;
             for (;;) {
-                TimeUnit.SECONDS.sleep(ACTIVITY_DELAY);
-
+                // задержка между запросом вопроса
+                TimeUnit.SECONDS.sleep(ACTIVITY_DELAY_SEC);
                 String question = pwClient.getCurrentQuestion();
+                //проверка на отсутствующий вопрос, попытка перезауска
                 if (question == null) {
                     try {
                         pwClient.startNewGame();
@@ -58,28 +67,37 @@ public class Application {
                     }
                     continue;
                 }
+                //если вопрос не пустой, то проверяем его на новый/старый
+                if (!Objects.equals(question, oldQuestion)) {
+                    //если новый, то запоминаем вопрос, получаем список ответов
+                    oldQuestion = question;
 
-                List<String> answers = ansClient.getAnswers(question);
-                if (!answers.isEmpty()) {
-                    postAnswers(pwClient, answers);
-                } else if (missCount > MAX_MISS_COUNT) {
-                    postSomeFun(pwClient, poroshok);
-                    missCount = 0;
+                    answers.clear();
+                    answers.addAll(ansClient.getAnswers(question));
+
+                    randomWaitBeforeFirstAnswer();
+                } else {
+                    //если старый, то пробуем вывести один из полученных ответов
+                    if (!answers.isEmpty()) {
+                        String answer = answers.poll();
+                        pwClient.postMessage(answer);
+                    }
                 }
-                missCount++;
+                //если таймер веселого сообщения превысил порог, выводим веселое сообщение
+                funWait++;
+                if (funWait > MAX_FUN_DELAY) {
+                    postSomeFun(pwClient, poroshok);
+                    funWait = 0;
+                }
+                //end!!!
             }
         }
     }
 
-    private static void postAnswers(PicWordClient client, List<String> answers) throws ClientException {
-        int i = 0;
-        for (String answer : answers) {
-            client.postMessage(answer);
-            if (client.IsAnswerRight(answer) || i >= MAX_ANSWERS) {
-                break;
-            }
-            i++;
-        }
+    private static void randomWaitBeforeFirstAnswer() throws InterruptedException {
+        long range = (long) RANDOM_GENERATOR.nextDouble() * WAIT_BEFORE_ANSWER_RANGE_SEC;
+
+        TimeUnit.SECONDS.sleep(MIN_WAIT_BEFORE_ANSWER_SEC + range);
     }
 
     private static void postSomeFun(final PicWordClient pwClient, final FunClient poroshok) throws ClientException {
@@ -92,7 +110,7 @@ public class Application {
     private static void initLogger() {
         try {
             LogManager.getLogManager().readConfiguration(
-                    Application.class.getResourceAsStream("/META-INF/logging.properties"));
+                Application.class.getResourceAsStream("/META-INF/logging.properties"));
         } catch (IOException ioe) {
             System.err.println("Could not setup logger configuration: " + ioe.toString());
         }

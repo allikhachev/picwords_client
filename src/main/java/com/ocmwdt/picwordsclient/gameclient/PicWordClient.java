@@ -18,10 +18,6 @@ public interface PicWordClient extends Closeable {
     void toGameTab() throws ClientException;
 
     void postMessage(String message) throws ClientException;
-
-    /**
-     * Returns current game question.
-     */
+    
     String getCurrentQuestion();
-
 }

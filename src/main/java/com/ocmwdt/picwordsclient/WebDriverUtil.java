@@ -11,8 +11,8 @@ import org.openqa.selenium.htmlunit.HtmlUnitDriver;
  */
 public final class WebDriverUtil {
 
-    private static final int SCRIPT_TIMEOUT = 7;
-    private static final int PAGE_LOAD_TIMEOUT = 7;
+    private static final int SCRIPT_TIMEOUT = 15;
+    private static final int PAGE_LOAD_TIMEOUT = 15;
 
     private WebDriverUtil() {
     }
