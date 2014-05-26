@@ -66,7 +66,6 @@ public class LoopyRuAnswerClient implements AnswerClient {
             List<String> answers = new ArrayList<>();
             for (WebElement element : answerElements) {
                 answers.add(element.getText());
-                LOG.log(Level.INFO, "answer: {0}", element.getText());
             }
             return answers;
         } catch (NoSuchElementException | TimeoutException ex) {

@@ -11,6 +11,7 @@ import org.openqa.selenium.htmlunit.HtmlUnitDriver;
  */
 public final class WebDriverUtil {
 
+    private static final int ELEMENT_WAIT_TIMEOUT = 3;
     private static final int SCRIPT_TIMEOUT = 15;
     private static final int PAGE_LOAD_TIMEOUT = 15;
 
@@ -20,8 +21,9 @@ public final class WebDriverUtil {
     public static final WebDriver getFirefoxDriver() {
         FirefoxDriver driver = new FirefoxDriver();
         driver.manage().timeouts().
-                pageLoadTimeout(PAGE_LOAD_TIMEOUT, TimeUnit.SECONDS).
-                setScriptTimeout(SCRIPT_TIMEOUT, TimeUnit.SECONDS);
+            pageLoadTimeout(PAGE_LOAD_TIMEOUT, TimeUnit.SECONDS).
+            setScriptTimeout(SCRIPT_TIMEOUT, TimeUnit.SECONDS).
+            implicitlyWait(ELEMENT_WAIT_TIMEOUT, TimeUnit.SECONDS);
         return driver;
     }
 
@@ -29,8 +31,9 @@ public final class WebDriverUtil {
 
         HtmlUnitDriver driver = new HtmlUnitDriver();
         driver.manage().timeouts().
-                pageLoadTimeout(PAGE_LOAD_TIMEOUT, TimeUnit.SECONDS).
-                setScriptTimeout(SCRIPT_TIMEOUT, TimeUnit.SECONDS);
+            pageLoadTimeout(PAGE_LOAD_TIMEOUT, TimeUnit.SECONDS).
+            setScriptTimeout(SCRIPT_TIMEOUT, TimeUnit.SECONDS).
+            implicitlyWait(ELEMENT_WAIT_TIMEOUT, TimeUnit.SECONDS);
         driver.setJavascriptEnabled(jsEnable);
         return driver;
     }

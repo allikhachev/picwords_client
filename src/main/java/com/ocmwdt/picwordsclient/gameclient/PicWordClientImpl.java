@@ -23,7 +23,7 @@ public class PicWordClientImpl implements PicWordClient {
     private static final String MES_INPUT_PATH = "//div[@id='main']//input[@id='message']";
     private static final String SEND_BUTTON_PATH = "//div[@id='main']//input[@id='sendButton']";
     private static final String LAST_QUESTION_PATH = ".//*[@id='text']/span[@class='serverMessage' "
-            + "and contains(.,'опрос:') and position()=last()]";
+        + "and contains(.,'опрос:') and position()=last()]";
     private static final String EMAIL_INPUT_PATH = "//*[@id='authEmail']";
     private static final String PASSW_INPUT_PATH = "//*[@id='authPassword']";
     private static final String LOGIN_BUTTON_PATH = "//*[@id='authButton']";
@@ -97,7 +97,6 @@ public class PicWordClientImpl implements PicWordClient {
             messageInput.clear();
             messageInput.sendKeys(message);
             sendButton.click();
-            LOG.log(Level.INFO, "posted message: {0}", message);
         } catch (NoSuchElementException nsee) {
             LOG.log(Level.SEVERE, MSG_GAME_EL_NOT_FOUND, nsee);
             throw new ClientException(MSG_GAME_EL_NOT_FOUND, nsee);
@@ -107,10 +106,8 @@ public class PicWordClientImpl implements PicWordClient {
     @Override
     public String getCurrentQuestion() {
         try {
-            WebElement questionElement = driver.findElement(By.xpath(LAST_QUESTION_PATH));
-            String text = trimQuestion(questionElement.getText());
-            LOG.log(Level.INFO, "current question: {0}", text);
-            return text;
+            String text = driver.findElement(By.xpath(LAST_QUESTION_PATH)).getText();
+            return trimQuestion(text);
         } catch (NoSuchElementException nsee) {
             LOG.log(Level.INFO, "question not found");
             return null;
@@ -126,7 +123,7 @@ public class PicWordClientImpl implements PicWordClient {
             //wait for answer process
             String rightAnsPath = String.format(RIGHT_ANSWER_TEST_PATH, answer);
             new WebDriverWait(driver, ANSWER_PROCESS_TIMEOUT).
-                    until(ExpectedConditions.presenceOfElementLocated(By.xpath(rightAnsPath)));
+                until(ExpectedConditions.presenceOfElementLocated(By.xpath(rightAnsPath)));
             return true;
         } catch (NoSuchElementException | TimeoutException ex) {
             LOG.log(Level.INFO, "answer {0} incorrect", answer);
