@@ -24,6 +24,9 @@ import com.ocmwdt.picwordsclient.gameclient.PicWordClientImpl;
  */
 public class MainController implements GameController {
 
+    private static final String PRE_DECORATOR = "<i>";
+    private static final String POST_DECORATOR = "</i>";
+
     private static final Random RANDOM_GENERATOR = new Random();
     private static Logger LOG = Logger.getLogger(MainController.class.getName());
 
@@ -104,7 +107,7 @@ public class MainController implements GameController {
     }
 
     private void setParams(long getQuestionDelay, long minWaitBeforeAnswer, long waitBeforeAnswerRange) {
-        
+
         if (getQuestionDelay != 0) {
             _getQuestionDelay = getQuestionDelay;
         } else {
@@ -123,7 +126,7 @@ public class MainController implements GameController {
     }
 
     private void randomWaitBeforeFirstAnswer() throws InterruptedException {
-        
+
         long range = (long) RANDOM_GENERATOR.nextDouble() * _waitBeforeAnswerRange;
         TimeUnit.SECONDS.sleep(_minWaitBeforeAnswer + range);
     }
@@ -131,9 +134,12 @@ public class MainController implements GameController {
     private void postSomeFun(final PicWordClient pwClient, final FunClient poroshok) throws ClientException {
         List<String> funLines = poroshok.getNextFunnyText();
         for (String line : funLines) {
-            pwClient.postMessage(line);
+            pwClient.postMessage(decorateString(line));
             LOG.log(Level.INFO, "posted message: {0}", line);
         }
     }
 
+    private String decorateString(final String plainText) {
+        return PRE_DECORATOR + plainText + POST_DECORATOR;
+    }
 }

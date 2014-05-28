@@ -1,10 +1,13 @@
 package com.ocmwdt.picwordsclient;
 
-import com.ocmwdt.picwordsclient.exceptions.ClientException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+
+import org.openqa.selenium.remote.UnreachableBrowserException;
+
+import com.ocmwdt.picwordsclient.exceptions.ClientException;
 
 /**
  * Game client controller.
@@ -33,8 +36,11 @@ public class Application {
             try {
                 GameController controller = new MainController();
                 controller.run(email, password, 0, 0, 0);
+            } catch (UnreachableBrowserException ube) {
+                LOG.log(Level.SEVERE, "Browser is closed", ube);
+                break;
             } catch (RuntimeException re) {
-                LOG.log(Level.SEVERE, null, re);
+                LOG.log(Level.SEVERE, re.toString(), re);
             }
         }
 
