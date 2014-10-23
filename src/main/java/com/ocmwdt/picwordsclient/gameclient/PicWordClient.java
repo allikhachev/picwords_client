@@ -13,11 +13,15 @@ public interface PicWordClient extends Closeable {
 
     void authorization(String login, String passw) throws ClientException;
 
-    boolean IsAnswerRight(final String answer);
-
     void toGameTab() throws ClientException;
 
     void postMessage(String message) throws ClientException;
-    
+
+    /**
+     * @param question
+     * @return answer for the question or null if answer not found
+     */
+    String getRightAnswer(String question);
+
     String getCurrentQuestion();
 }

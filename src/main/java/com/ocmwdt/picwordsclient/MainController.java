@@ -14,7 +14,6 @@ import com.ocmwdt.picwordsclient.answerclient.AnswerClient;
 import com.ocmwdt.picwordsclient.answerclient.LoopyRuAnswerClient;
 import com.ocmwdt.picwordsclient.exceptions.ClientException;
 import com.ocmwdt.picwordsclient.funclient.FunClient;
-import com.ocmwdt.picwordsclient.funclient.PoroshokuhodiRuClient;
 import com.ocmwdt.picwordsclient.gameclient.PicWordClient;
 import com.ocmwdt.picwordsclient.gameclient.PicWordClientImpl;
 
@@ -46,8 +45,7 @@ public class MainController implements GameController {
         setParams(getQuestionDelay, minWaitBeforeAnswer, waitBeforeAnswerRange);
 
         try (PicWordClient pwClient = new PicWordClientImpl(URL);
-            AnswerClient ansClient = new LoopyRuAnswerClient();
-            FunClient poroshok = new PoroshokuhodiRuClient()) {
+            AnswerClient ansClient = new LoopyRuAnswerClient()) {
 
             if (user != null && passwd != null && !user.isEmpty() && !passwd.isEmpty()) {
                 pwClient.authorization(user, passwd);
@@ -58,7 +56,6 @@ public class MainController implements GameController {
             String oldQuestion = null;
             Queue<String> answers = new ArrayDeque<>();
 
-            int funWait = 0;
             for (;;) {
                 // задержка между запросом вопроса
                 TimeUnit.SECONDS.sleep(_getQuestionDelay);
@@ -73,6 +70,8 @@ public class MainController implements GameController {
                 }
                 //если вопрос не пустой, то проверяем его на новый/старый
                 if (!Objects.equals(question, oldQuestion)) {
+                    String rirghtAnswer = pwClient.getRightAnswer(oldQuestion);
+                    LOG.log(Level.INFO, "right answer: {0}", rirghtAnswer);
                     //если новый, то запоминаем вопрос, получаем список ответов
                     oldQuestion = question;
                     LOG.log(Level.INFO, "current question: {0}", question);
@@ -88,12 +87,6 @@ public class MainController implements GameController {
                         pwClient.postMessage(answer);
                         LOG.log(Level.INFO, "posted answer: {0}", answer);
                     }
-                }
-                //если таймер веселого сообщения превысил порог, выводим веселое сообщение
-                funWait++;
-                if (funWait > MIN_FUN_DELAY) {
-                    postSomeFun(pwClient, poroshok);
-                    funWait = 0;
                 }
                 //end!!!
             }

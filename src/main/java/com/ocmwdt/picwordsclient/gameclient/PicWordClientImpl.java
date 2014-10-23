@@ -5,14 +5,12 @@ import java.io.IOException;
 import java.util.logging.Logger;
 import org.openqa.selenium.WebDriver;
 import com.ocmwdt.picwordsclient.exceptions.ClientException;
+import java.util.List;
 import java.util.logging.Level;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 /**
  *
@@ -22,13 +20,14 @@ public class PicWordClientImpl implements PicWordClient {
 
     private static final String MES_INPUT_PATH = "//div[@id='main']//input[@id='message']";
     private static final String SEND_BUTTON_PATH = "//div[@id='main']//input[@id='sendButton']";
-    private static final String LAST_QUESTION_PATH = ".//*[@id='text']/span[@class='serverMessage' "
-        + "and contains(.,'опрос:') and position()=last()]";
+    private static final String LAST_QUESTION_PATH = "//*[@id='text']/span[@class='serverMessage' "
+            + "and contains(.,'опрос:') and position()=last()]";
     private static final String EMAIL_INPUT_PATH = "//*[@id='authEmail']";
     private static final String PASSW_INPUT_PATH = "//*[@id='authPassword']";
     private static final String LOGIN_BUTTON_PATH = "//*[@id='authButton']";
-    private static final String RIGHT_ANSWER_TEST_PATH = "//*[@id='text']/text()[contains(.,'Вы ответили верно')]/following-sibling::span[@class='serverMessage' and contains(text(),'%s')]";
-    private static final int ANSWER_PROCESS_TIMEOUT = 2;
+    private static final String RIGHT_ANSWER_PATH = "//*[@id='text']/span[@class='serverMessage' "
+            + "and contains(.,'опрос:') and contains(.,'%s')]/"
+            + "following::text()[contains(.,'Правильный ответ')]/following::span[position()=1]";
 
     private static final String TO_NEW_GAME_PATH = "//*[@id='newGame']";
     private static final String TO_GAME_TAB_PATH = "//*[@id='toGame']";
@@ -104,6 +103,12 @@ public class PicWordClientImpl implements PicWordClient {
     }
 
     @Override
+    public String getRightAnswer(String question) {
+        List<WebElement> elements = driver.findElements(By.xpath(String.format(RIGHT_ANSWER_PATH, question)));
+        return elements.isEmpty() ? null : elements.get(0).getText();
+    }
+
+    @Override
     public String getCurrentQuestion() {
         try {
             String text = driver.findElement(By.xpath(LAST_QUESTION_PATH)).getText();
@@ -111,23 +116,6 @@ public class PicWordClientImpl implements PicWordClient {
         } catch (NoSuchElementException nsee) {
             LOG.log(Level.INFO, "question not found");
             return null;
-        }
-    }
-
-    @Override
-    public boolean IsAnswerRight(final String answer) {
-        if (answer == null || answer.isEmpty()) {
-            return false;
-        }
-        try {
-            //wait for answer process
-            String rightAnsPath = String.format(RIGHT_ANSWER_TEST_PATH, answer);
-            new WebDriverWait(driver, ANSWER_PROCESS_TIMEOUT).
-                until(ExpectedConditions.presenceOfElementLocated(By.xpath(rightAnsPath)));
-            return true;
-        } catch (NoSuchElementException | TimeoutException ex) {
-            LOG.log(Level.INFO, "answer {0} incorrect", answer);
-            return false;
         }
     }
 
