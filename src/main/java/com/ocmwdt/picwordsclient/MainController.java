@@ -40,12 +40,12 @@ public class MainController implements GameController {
 
     @Override
     public void run(String user, String passwd, long getQuestionDelay,
-        long minWaitBeforeAnswer, long waitBeforeAnswerRange) {
+            long minWaitBeforeAnswer, long waitBeforeAnswerRange) {
 
         setParams(getQuestionDelay, minWaitBeforeAnswer, waitBeforeAnswerRange);
 
         try (PicWordClient pwClient = new PicWordClientImpl(URL);
-            AnswerClient ansClient = new LoopyRuAnswerClient()) {
+                AnswerClient ansClient = new LoopyRuAnswerClient()) {
 
             if (user != null && passwd != null && !user.isEmpty() && !passwd.isEmpty()) {
                 pwClient.authorization(user, passwd);
@@ -57,10 +57,10 @@ public class MainController implements GameController {
             Queue<String> answers = new ArrayDeque<>();
 
             for (;;) {
-                // задержка между запросом вопроса
+                // delay before question getting
                 TimeUnit.SECONDS.sleep(_getQuestionDelay);
                 String question = pwClient.getCurrentQuestion();
-                //проверка на отсутствующий вопрос, попытка перезауска
+                //if new queston is empty then try to restart game
                 if (question == null) {
                     try {
                         pwClient.startNewGame();
@@ -68,7 +68,7 @@ public class MainController implements GameController {
                     }
                     continue;
                 }
-                //если вопрос не пустой, то проверяем его на новый/старый
+                //if question is not empty and is new
                 if (!Objects.equals(question, oldQuestion)) {
                     String rirghtAnswer = pwClient.getRightAnswer(oldQuestion);
                     LOG.log(Level.INFO, "right answer: {0}", rirghtAnswer);
@@ -81,8 +81,11 @@ public class MainController implements GameController {
 
                     randomWaitBeforeFirstAnswer();
                 } else {
-                    //если старый, то пробуем вывести один из полученных ответов
+                    //if question is not empty and is old
                     if (!answers.isEmpty()) {
+                        if (isAlone(pwClient)) {
+                            continue;
+                        }
                         String answer = answers.poll();
                         pwClient.postMessage(answer);
                         LOG.log(Level.INFO, "posted answer: {0}", answer);
@@ -101,21 +104,17 @@ public class MainController implements GameController {
 
     private void setParams(long getQuestionDelay, long minWaitBeforeAnswer, long waitBeforeAnswerRange) {
 
-        if (getQuestionDelay != 0) {
-            _getQuestionDelay = getQuestionDelay;
-        } else {
-            _getQuestionDelay = ACTIVITY_DELAY_SEC;
-        }
-        if (minWaitBeforeAnswer != 0) {
-            _minWaitBeforeAnswer = minWaitBeforeAnswer;
-        } else {
-            _minWaitBeforeAnswer = MIN_WAIT_BEFORE_ANSWER_SEC;
-        }
-        if (waitBeforeAnswerRange != 0) {
-            _waitBeforeAnswerRange = waitBeforeAnswerRange;
-        } else {
-            _waitBeforeAnswerRange = WAIT_BEFORE_ANSWER_RANGE_SEC;
-        }
+        _getQuestionDelay = getQuestionDelay != 0 ? getQuestionDelay : ACTIVITY_DELAY_SEC;
+
+        _minWaitBeforeAnswer = minWaitBeforeAnswer != 0 ? minWaitBeforeAnswer : MIN_WAIT_BEFORE_ANSWER_SEC;
+
+        _waitBeforeAnswerRange = waitBeforeAnswerRange != 0 ? waitBeforeAnswerRange : WAIT_BEFORE_ANSWER_RANGE_SEC;
+
+    }
+
+    private boolean isAlone(PicWordClient pwClient) {
+        int gamersAmount = pwClient.getAmountOfGamers();
+        return gamersAmount == 1;
     }
 
     private void randomWaitBeforeFirstAnswer() throws InterruptedException {

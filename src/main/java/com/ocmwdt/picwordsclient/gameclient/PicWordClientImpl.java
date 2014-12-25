@@ -1,16 +1,18 @@
 package com.ocmwdt.picwordsclient.gameclient;
 
-import com.ocmwdt.picwordsclient.WebDriverUtil;
 import java.io.IOException;
-import java.util.logging.Logger;
-import org.openqa.selenium.WebDriver;
-import com.ocmwdt.picwordsclient.exceptions.ClientException;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+
+import com.ocmwdt.picwordsclient.WebDriverUtil;
+import com.ocmwdt.picwordsclient.exceptions.ClientException;
 
 /**
  *
@@ -28,6 +30,7 @@ public class PicWordClientImpl implements PicWordClient {
     private static final String RIGHT_ANSWER_PATH = "//*[@id='text']/span[@class='serverMessage' "
             + "and contains(.,'опрос:') and contains(.,'%s')]/"
             + "following::text()[contains(.,'Правильный ответ')]/following::span[position()=1]";
+    private static final String GAMERS_ROW_PATH = "//*[@id='userList']/tr[position()>1]";
 
     private static final String TO_NEW_GAME_PATH = "//*[@id='newGame']";
     private static final String TO_GAME_TAB_PATH = "//*[@id='toGame']";
@@ -117,6 +120,12 @@ public class PicWordClientImpl implements PicWordClient {
             LOG.log(Level.INFO, "question not found");
             return null;
         }
+    }
+
+    @Override
+    public int getAmountOfGamers() {
+        List<WebElement> gamers = driver.findElements(By.xpath(GAMERS_ROW_PATH));
+        return gamers.size();
     }
 
     private void init() {

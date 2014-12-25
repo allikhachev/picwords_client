@@ -1,6 +1,7 @@
 package com.ocmwdt.picwordsclient.gameclient;
 
 import com.ocmwdt.picwordsclient.exceptions.ClientException;
+
 import java.io.Closeable;
 
 /**
@@ -24,4 +25,6 @@ public interface PicWordClient extends Closeable {
     String getRightAnswer(String question);
 
     String getCurrentQuestion();
+
+    int getAmountOfGamers();
 }
