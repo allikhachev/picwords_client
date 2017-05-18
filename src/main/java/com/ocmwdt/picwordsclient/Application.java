@@ -16,7 +16,7 @@ import com.ocmwdt.picwordsclient.exceptions.ClientException;
  */
 public class Application {
 
-    private static final String DEFAULT_PASSWORD = "663399";
+    private static final String DEFAULT_PASSWORD = "PDh7uH";
     private static final String DEFAULT_EMAIL = "some85one@mail.ru";
 
     private static Logger LOG = Logger.getLogger(Application.class.getName());

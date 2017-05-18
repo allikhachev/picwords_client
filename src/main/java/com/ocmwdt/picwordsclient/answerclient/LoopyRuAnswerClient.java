@@ -30,7 +30,7 @@ public class LoopyRuAnswerClient implements AnswerClient {
     private static final String ANSWERS_FOUND_PATH = "//div[@class='lft']/div[@class='cm' and contains(., 'Всего найдено')]/p";
     private static final String ANSWERS_PATH = "//div[@class='cm']/div[@class='cf']/div[contains(@class, 'wd') ]/h3/a";
 
-    private static Logger LOG = Logger.getLogger(LoopyRuAnswerClient.class.getName());
+    private static final Logger LOG = Logger.getLogger(LoopyRuAnswerClient.class.getName());
 
     WebDriver driver;
 
@@ -41,7 +41,7 @@ public class LoopyRuAnswerClient implements AnswerClient {
     @Override
     public void close() throws IOException {
         if (driver != null) {
-            LOG.log(Level.INFO, LoopyRuAnswerClient.class.getSimpleName() + " closed");
+            LOG.log(Level.INFO, "{0} closed", LoopyRuAnswerClient.class.getSimpleName());
             driver.close();
         }
     }
@@ -80,7 +80,7 @@ public class LoopyRuAnswerClient implements AnswerClient {
     private void init() {
         driver = WebDriverUtil.getHtmlUnitDriver(false);
         driver.get(SITE);
-        LOG.log(Level.INFO, LoopyRuAnswerClient.class.getSimpleName() + " closed");
+        LOG.log(Level.INFO, "{0} created", LoopyRuAnswerClient.class.getSimpleName());
     }
 
 }
